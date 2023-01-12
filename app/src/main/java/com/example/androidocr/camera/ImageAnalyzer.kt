@@ -7,9 +7,8 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.mlkit.vision.common.InputImage
 
-private class YourImageAnalyzer : ImageAnalysis.Analyzer {
+class ImageAnalyzer : ImageAnalysis.Analyzer {
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image

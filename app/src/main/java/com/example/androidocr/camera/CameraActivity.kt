@@ -17,6 +17,7 @@ import androidx.camera.video.VideoCapture
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.androidocr.databinding.CameraBinding
+import com.example.androidocr.camera.ImageAnalyzer
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
@@ -66,7 +67,7 @@ class CameraActivity : AppCompatActivity() {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
             if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Photos/Camera")
             }
         }
 
@@ -93,9 +94,25 @@ class CameraActivity : AppCompatActivity() {
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
                 }
-            }
-        )}
+            })
 
+            object : ImageCapture.OnImageCapturedCallback() {
+                override fun onError(exc: ImageCaptureException) {
+                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                }
+
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    val msg = "Photo captured"
+                    ImageAnalyzer = ImageAnalysis.Analyzer
+                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                    Log.d(TAG, msg)
+                }
+            }
+    }
+
+    fun OnImageCapturedListener(output: ImageCapture.OutputFileResults){
+
+    }
     private fun startCamera() {
     val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
