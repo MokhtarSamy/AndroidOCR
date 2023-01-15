@@ -15,6 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidOCR"
         tools:targetApi="31">
+
         <activity
             android:name=".camera.CameraActivity"
             android:exported="true"
@@ -27,7 +28,7 @@
         </activity>
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"
-            android:value="ocr" />
+            android:value="ocr, ica" />
     </application>
 
 </manifest>

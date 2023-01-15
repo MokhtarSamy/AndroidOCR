@@ -1,6 +1,7 @@
 package com.example.androidocr.camera
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.os.Build
@@ -81,21 +82,7 @@ class CameraActivity : AppCompatActivity() {
         // Set up image capture listener, which is triggered after photo has
         // been taken
         imageCapture.takePicture(
-            outputOptions,
             ContextCompat.getMainExecutor(this),
-            object : ImageCapture.OnImageSavedCallback {
-                override fun onError(exc: ImageCaptureException) {
-                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
-                }
-
-                override fun
-                        onImageSaved(output: ImageCapture.OutputFileResults){
-                    val msg = "Photo capture succeeded: ${output.savedUri}"
-                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, msg)
-                }
-            })
-
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
@@ -103,16 +90,21 @@ class CameraActivity : AppCompatActivity() {
 
                 override fun onCaptureSuccess(image: ImageProxy) {
                     val msg = "Photo captured"
-                    ImageAnalyzer = ImageAnalysis.Analyzer
+                    val analyzer = ImageAnalyzer()
+                    analyzer.analyze(image)
+
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
                 }
-            }
+            })
+
+
     }
 
     fun OnImageCapturedListener(output: ImageCapture.OutputFileResults){
 
     }
+    @SuppressLint("SuspiciousIndentation")
     private fun startCamera() {
     val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
