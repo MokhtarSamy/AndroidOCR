@@ -3,11 +3,16 @@ package com.example.androidocr.camera
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ContentValues
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.view.OrientationEventListener
+import android.view.Surface
+import android.view.Surface.ROTATION_180
+import android.view.Surface.ROTATION_90
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
@@ -35,9 +40,6 @@ class CameraActivity : AppCompatActivity() {
 
     private var imageCapture: ImageCapture? = null
 
-    private var videoCapture: VideoCapture<Recorder>? = null
-    private var recording: Recording? = null
-
     private lateinit var cameraExecutor: ExecutorService
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,9 +62,8 @@ class CameraActivity : AppCompatActivity() {
 
     private fun takePhoto() {// Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
-
         // Create time stamped name and MediaStore entry.
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
+        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.FRANCE)
             .format(System.currentTimeMillis())
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
@@ -81,30 +82,29 @@ class CameraActivity : AppCompatActivity() {
 
         // Set up image capture listener, which is triggered after photo has
         // been taken
+
         imageCapture.takePicture(
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
                 }
-
                 override fun onCaptureSuccess(image: ImageProxy) {
                     val msg = "Photo captured"
                     val analyzer = ImageAnalyzer()
-                    analyzer.analyze(image)
 
+                    analyzer.analyze(image)
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
                 }
             })
-
-
     }
 
     fun OnImageCapturedListener(output: ImageCapture.OutputFileResults){
 
     }
-    @SuppressLint("SuspiciousIndentation")
+
+    @SuppressLint("SuspiciousIndentation", "RestrictedApi")
     private fun startCamera() {
     val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
@@ -119,8 +119,27 @@ class CameraActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
+
+            var rotation : Int = ROTATION_90
+            val orientationEventListener = object : OrientationEventListener(this) {
+                override fun onOrientationChanged(orientation : Int) {
+                    // Monitors orientation values to determine the target rotation value
+                    rotation = when (orientation) {
+                        in 45..134 -> Surface.ROTATION_270
+                        in 135..224 -> Surface.ROTATION_180
+                        in 225..314 -> Surface.ROTATION_90
+                        else -> Surface.ROTATION_90
+                    }
+
+                }
+            }
+            orientationEventListener.enable()
+
             imageCapture = ImageCapture.Builder()
+                .setTargetRotation(rotation)
                 .build()
+            Log.d(TAG, "ROTATIONSS" + imageCapture!!.targetRotation)
+            Log.d(TAG, "SENSORSS" + imageCapture!!.camera?.cameraInfo?.sensorRotationDegrees)
 
             val imageAnalyzer = ImageAnalysis.Builder()
                 .build()
@@ -132,7 +151,6 @@ class CameraActivity : AppCompatActivity() {
 
             // Select back camera as a default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
             try {
                 // Unbind use cases before rebinding
                 cameraProvider.unbindAll()
