@@ -63,19 +63,28 @@ def mid(p1, p2):
     return [int((p1[0] + p2[0]) / 2), int((p1[1] + p2[1]) / 2)]
 
 
-def add_annotations(img):
+def add_annotations(img, input):
+    txt_call = []
     for i in input:
         (p0, p1, p2, p3) = i[0]
         (txt, _) = i[1]
 
-        a = ang([mid(p0, p3), mid(p1, p2)], [[0, 0], [100, 0]])
-
         if math.dist(p0, p1) < math.dist(p1, p2):
-            a = 360 - ang([mid(p0, p1), mid(p2, p3)], [[0, 0], [100, 0]])
+            s0, s1 = mid(p0, p1), mid(p2, p3)
+            a = 360 - ang([s0, s1], [[0, 0], [100, 0]])
+        else:
+            s0, s1 = mid(p0, p3), mid(p1, p2)
+            a = ang([s0, s1], [[0, 0], [100, 0]])
 
-        addText(int(p0[0]), int(p0[1]), a, 5, txt, img)
+        box = np.int0(i[0])
+        cv2.drawContours(img, [box], 0, (200, 200, 200, 0.5), thickness=cv2.FILLED)
+
+        txt_call.append((s0[0], s0[1], a, 5, txt, img))
+
+    for (x, y, a, size, txt, img) in txt_call:
+        addText(x, y, a, size, txt, img)
 
 
 img = cv2.imread("IMG_2999.jpg")
-add_annotations(img)
+add_annotations(img, input)
 cv2.imwrite("img.png", img)
