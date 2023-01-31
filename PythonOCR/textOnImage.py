@@ -1,9 +1,9 @@
 import math
+import time
 from PIL import ImageDraw
 from PIL import Image, ImageFont
-import cv2
-import ast
-import json
+
+start_time = time.time()
 
 input = [[[[2879.0, 365.0], [3398.0, 57.0], [3466.0, 177.0], [2946.0, 485.0]],
           ('UniveRsi', 0.8513504862785339)],
@@ -39,6 +39,15 @@ def parseInput(input):
     return new_input
 
 
+def calculate_font_size(points):
+    # Calculer la distance entre les points
+    dist = math.sqrt((points[2][0] - points[0][0])**2 +
+                     (points[2][1] - points[0][1])**2)
+    # Déterminer la taille de police en fonction de la distance
+    font_size = int(dist / 10)
+    return font_size
+
+
 def processInput(points, text, image):
     '''
     Cette fonction prend en entrée les points des bounding boxes 
@@ -52,30 +61,12 @@ def processInput(points, text, image):
     slope = (y3 - y1) / (x3 - x1)
 
     angle = math.degrees(math.atan(slope))
-    fontSize = cv2.getFontScaleFromHeight(cv2.FONT_HERSHEY_SIMPLEX, height, 2)
-    #font = PILasOPENCV.truetype("arial.ttf", size=int(fontsize))
+    fontSize = calculate_font_size(points)
     addRotatedText(image,
                    abs(int(angle)), (points[0][0], points[0][1]),
                    text,
                    "black",
-                   fontSize=int(fontSize * 5))
-
-    text_image = Image.new('RGB', image.size, (255, 255, 255))
-    text_draw = ImageDraw.Draw(text_image)
-    text_draw.text((points[0][0], points[0][1]),
-                   "Your text here",
-                   fill="black")
-
-    text_image = text_image.rotate(angle,
-                                   resample=Image.BICUBIC,
-                                   expand=True,
-                                   center=points[0])
-
-    mask = Image.new('1', text_image.size, 1)
-    draws = ImageDraw.Draw(mask)
-    draws.rectangle([(0, 0), text_image.size], fill=0)
-
-    image.paste(text_image, (0, 0), mask)
+                   fontSize=int(fontSize))
 
 
 def addRotatedText(image, angle, xy, text, fill, fontSize):
@@ -98,7 +89,7 @@ def addRotatedText(image, angle, xy, text, fill, fontSize):
     if angle % 90 == 0:
         rotated_mask = mask.rotate(angle)
     else:
-        bigger_mask = mask.resize((max_dim * 8, max_dim * 8),
+        bigger_mask = mask.resize((max_dim * 2, max_dim * 2),
                                   resample=Image.BICUBIC)
         rotated_mask = bigger_mask.rotate(angle).resize(mask_size,
                                                         resample=Image.LANCZOS)
@@ -107,26 +98,6 @@ def addRotatedText(image, angle, xy, text, fill, fontSize):
     mask = rotated_mask.crop(b_box)
     color_image = Image.new('RGBA', image.size, fill)
     image.paste(color_image, mask)
-
-
-def fit_text_width(text, height):
-    font = ImageFont.truetype("arial.ttf", 20)
-    font_size = 1
-    text_length = font.getlength(text)
-    bbox = font.getbbox(text)
-    text_height = bbox[3] - bbox[1]
-    #text_height = textbbox[3] - textbbox[1]
-    while text_length < height:
-        font_size += 1
-        textbbox2 = font.getbbox(text)
-        text_height = textbbox2[3] - textbbox2[1]
-
-    fontsize = cv2.getFontScaleFromHeight(cv2.FONT_HERSHEY_SIMPLEX, height, 2)
-    font_scale = 1
-    text_size = cv2.getTextSize(text, font, font_scale, 2)[0]
-    text_height = text_size[1]
-
-    return font_size
 
 
 def createNewImage(new_input, originalImageName):
@@ -145,4 +116,6 @@ def createNewImage(new_input, originalImageName):
 
 
 new_input = parseInput(input)
+
 createNewImage(new_input, "IMG_2999.jpg")
+print("Temps d'exécution: ", time.time() - start_time)
